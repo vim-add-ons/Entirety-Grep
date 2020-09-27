@@ -3,9 +3,12 @@
 " License: Gnu GPL v3.
 " 
 
+" Using various special characters…
+scriptencoding utf-8
+
 function! s:Entirety_StartMainList(state)
-    echom "I'm correctly called in a state: → ˙" .a:state. "˙←"
-    return ""
+    echom 'I''m correctly called in a state: → ˙' .a:state. '˙←'
+    return ''
 endfunc
 
 nnoremap <Plug>Entirety_StartMainList(n)    :call <SID>Entirety_StartMainList('n')<CR>
@@ -110,46 +113,43 @@ hi! ent_bluemsg ctermfg=123 ctermbg=25 cterm=bold
 hi! ent_goldmsg ctermfg=35 ctermbg=220 cterm=bold
 " }}}
 
-" FUNCTION: s:ZeroQuote_AddSDictFor(sfile,Ref) {{{
+" FUNCTION: s:Entirety_AddSDictFor(sfile,Ref) {{{
 " Remembers the given s:-dict provider-function (a getter) reference in internal
 " structures.
-function! s:ZeroQuote_AddSDictFor(sfile,Ref)
+function! s:Entirety_AddSDictFor(sfile,Ref)
     let l:the_sid = matchstr(string(a:Ref),'<SNR>\zs\d\+\ze_')
-    let l:the_sfile = (a:sfile =~ 'function ') ? "" : a:sfile
+    let l:the_sfile = (a:sfile =~ 'function ') ? '' : a:sfile
     730EntiretyPrint! lev:6 p:0.5:%8 s:-dict offered %3 °• %4 a:Ref %3 °• %8 In-SID%5\|%2 l:the_sid %3 °• %8 Own-SID%5\|%2 (expand('<SID>')[5:-2])
     let s:ent_s_dict_providers[l:the_sid] = [ a:Ref, l:the_sfile ]
 endfunc
 " }}}
 
 " User-commands definitions {{{
-if exists(":EntiretyPrint")
-    call timer_start(700, {->execute("7EntiretyPrint %1WARNING%-: A command %2 :EntiretyPrint
-                \ %- already existed. It has been %1overwritten%-…","")})
+if exists(':EntiretyPrint')
+    call timer_start(700, {->execute('7EntiretyPrint %1WARNING%-: A command %2 :EntiretyPrint
+                \ %- already existed. It has been %1overwritten%-…','')})
 endif
 " :EntiretyPrint — the main command.
-command! -nargs=+ -count=4 -bang -bar -complete=var EntiretyPrint call s:ZeroQuote_EntiretyPrintCmdImpl(<count>,<q-bang>,expand("<sflnum>"),
-            \ s:ZeroQuote_evalArgs([<f-args>],exists("l:")?(l:):{},exists("a:")?(a:):{}))
+command! -nargs=+ -count=4 -bang -bar -complete=var EntiretyPrint call s:Entirety_PrintCmdImpl(<count>,<q-bang>,expand('<sflnum>'),
+            \ s:Entirety_evalArgs([<f-args>],exists('l:')?(l:):{},exists('a:')?(a:):{}))
 
-if exists(":EntiretySetSDictFunc")
+if exists(':EntiretySetSDictFunc')
     1700EntiretyPrint! lev:7 %1WARNING%-: A command %2 :EntiretySetSDictFunc %- already existed. It has been %1overwritten%-…
 endif
 " :EntiretySetSDictFunc — an API to offer an s:-dict getter function.
-command! -nargs=1 EntiretySetSDictFunc call s:ZeroQuote_AddSDictFor(expand("<sfile>"),<args>)
-
-" Debugging command.
-"com! -nargs=* -complete=command EntiretyDebug <args>
+command! -nargs=1 EntiretySetSDictFunc call s:Entirety_AddSDictFor(expand("<sfile>"),<args>)
 " }}}
 
 """""""""""""""""" THE END OF THE SCRIPT BODY }}}
 
-" FUNCTION: s:ZeroQuote_EntiretyPrint(hl,...) {{{
+" FUNCTION: s:Entirety_Print(hl,...) {{{
 " 0 - error         LLEV=0 will show only them
 " 1 - warning       LLEV=1
 " 2 - info          …
 " 3 - notice        …
 " 4 - debug         …
 " 5 - debug2        …
-function! s:ZeroQuote_EntiretyPrint(hl, ...)
+function! s:Entirety_Print(hl, ...)
     " Log only warnings and errors by default.
     if a:hl < 7 && a:hl > get(g:,'zqecho_log_level', 1) || a:0 == 0
         return
@@ -175,22 +175,22 @@ function! s:ZeroQuote_EntiretyPrint(hl, ...)
 
     " Finally: detect %…. infixes, select color, output the message bit by bit.
     "           0       1       2          3        4          5         6       7        8         9         10
-    let c = ["Error", "red", "green2", "orange2", "blue2", "magenta", "lcyan", "white", "gray", "bluemsg", "goldmsg"]
-    let [pause,new_msg_pre,new_msg_post] = s:ZeroQuote_GetPrefixValue('p%[ause]', join(args) )
+    let c = ['Error', 'red', 'green2', 'orange2', 'blue2', 'magenta', 'lcyan', 'white', 'gray', 'bluemsg', 'goldmsg']
+    let [pause,new_msg_pre,new_msg_post] = s:Entirety_GetPrefixValue('p%[ause]', join(args) )
     let msg = new_msg_pre . new_msg_post
 
     " Pre-process the message…
-    let val = ""
+    let val = ''
     let [arr_hl,arr_msg] = [ [], [] ]
     while val != v:none
-        let [val,new_msg_pre,new_msg_post] = s:ZeroQuote_GetPrefixValue('\%', msg)
+        let [val,new_msg_pre,new_msg_post] = s:Entirety_GetPrefixValue('\%', msg)
         let msg = new_msg_post
         if val != v:none
             call add(arr_msg, new_msg_pre)
             call add(arr_hl, val)
         elseif !empty(new_msg_pre)
             if empty(arr_hl)
-                call add(arr_msg, "")
+                call add(arr_msg, '')
                 call add(arr_hl, hl)
             endif
             " The final part of the message.
@@ -235,14 +235,14 @@ function! s:ZeroQuote_EntiretyPrint(hl, ...)
     endif
 
     if !s:ent_MessagesCmd_state && !empty(filter(arr_msg,'!empty(v:val)'))
-        call s:ZeroQuote_DoPause(pause)
+        call s:Entirety_DoPause(pause)
     endif
 endfunc
 " }}}
 
 """""""""""""""""" HELPER FUNCTIONS {{{
-" FUNCTION: s:ZeroQuote_EntiretyPrintCmdImpl(hl, bang, linenum, msg_bits) {{{
-function! s:ZeroQuote_EntiretyPrintCmdImpl(hi, bang, linenum, msg_bits)
+" FUNCTION: s:Entirety_EntiretyPrintCmdImpl(hl, bang, linenum, msg_bits) {{{
+function! s:Entirety_PrintCmdImpl(hi, bang, linenum, msg_bits)
     " Presume a cmdline-window invocation and prepend the history-index instead.
     if a:hi < 7 && empty(a:linenum)
         let line = "cmd:" . histnr("cmd")
@@ -272,14 +272,14 @@ function! s:ZeroQuote_EntiretyPrintCmdImpl(hi, bang, linenum, msg_bits)
 
     " Async-message?
     if(!empty(a:bang))
-        call s:ZeroQuote_Deploy_TimerTriggered_Message(extend([hi], msg_arr), 0, a:hi > 25 ? a:hi : 7)
+        call s:Entirety_Deploy_TimerTriggered_Message(extend([hi], msg_arr), 0, a:hi > 25 ? a:hi : 7)
     else
-        call s:ZeroQuote_EntiretyPrint(hi, msg_arr)
+        call s:Entirety_Print(hi, msg_arr)
     endif
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_TryExtendSDict() {{{
-function! s:ZeroQuote_TryExtendSDict()
+" FUNCTION: s:Entirety_TryExtendSDict() {{{
+function! s:Entirety_TryExtendSDict()
     let stack = expand("<stack>")
     for sid in keys(s:ent_s_dict_providers)
         let Ref = s:ent_s_dict_providers[sid][0]
@@ -296,8 +296,8 @@ function! s:ZeroQuote_TryExtendSDict()
     return [0,0]
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_TryRestoreSDict(is_needed,sid) {{{
-function! s:ZeroQuote_TryRestoreSDict(is_needed,sid)
+" FUNCTION: s:Entirety_TryRestoreSDict(is_needed,sid) {{{
+function! s:Entirety_TryRestoreSDict(is_needed,sid)
     if a:is_needed
         let Ref = s:ent_s_dict_providers[a:sid][0]
         for __key in keys(Ref())
@@ -309,8 +309,8 @@ function! s:ZeroQuote_TryRestoreSDict(is_needed,sid)
     endif
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_Deploy_TimerTriggered_Message(the_msg) {{{
-function! s:ZeroQuote_Deploy_TimerTriggered_Message(the_msg,...)
+" FUNCTION: s:Entirety_Deploy_TimerTriggered_Message(the_msg) {{{
+function! s:Entirety_Deploy_TimerTriggered_Message(the_msg,...)
     " Force-reset of the already deployed/deferred messages?
     " Done on the double-bang, i.e.: EntiretyPrint!! …
     if a:0 && a:1 > 0
@@ -319,7 +319,7 @@ function! s:ZeroQuote_Deploy_TimerTriggered_Message(the_msg,...)
 
     if a:0 && a:1 >= 0
         call add(s:ent_deferredMessagesQueue, a:the_msg)
-        call add(s:ent_timers, timer_start(a:0 >= 2 ? a:2 : 7, function("s:ZeroQuote_showDeferredMessageCallback")))
+        call add(s:ent_timers, timer_start(a:0 >= 2 ? a:2 : 7, function("s:Entirety_showDeferredMessageCallback")))
     else
         " A non-deploy theoretical-scenario, for niceness of the API.
         if type(a:the_msg) == v:t_list
@@ -330,59 +330,59 @@ function! s:ZeroQuote_Deploy_TimerTriggered_Message(the_msg,...)
     endif
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_showDeferredMessageCallback(timer) {{{
-function! s:ZeroQuote_showDeferredMessageCallback(timer)
+" FUNCTION: s:Entirety_showDeferredMessageCallback(timer) {{{
+function! s:Entirety_showDeferredMessageCallback(timer)
     call filter( s:ent_timers, 'v:val != a:timer' )
     let msg = remove(s:ent_deferredMessagesQueue, 0)
-    call s:ZeroQuote_EntiretyPrintCmdImpl(22, '', '', l:msg)
+    call s:Entirety_PrintCmdImpl(22, '', '', l:msg)
     redraw
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_DoPause(pause_value) {{{
-function! s:ZeroQuote_DoPause(pause_value)
+" FUNCTION: s:Entirety_DoPause(pause_value) {{{
+function! s:Entirety_DoPause(pause_value)
     "echom a:pause_value "← a:pause_value"
     if a:pause_value =~ '\v^-=\d+(\.\d+)=$'
-        let s:ZeroQuote_pause_value = float2nr(round(str2float(a:pause_value) * 1000.0))
+        let s:Entirety_pause_value = float2nr(round(str2float(a:pause_value) * 1000.0))
     else
         return
     endif
-    if s:ZeroQuote_pause_value =~ '\v^-=\d+$' && s:ZeroQuote_pause_value > 0
-        call s:ZeroQuote_PauseAllTimers(1, s:ZeroQuote_pause_value + 3)
-        exe "sleep" s:ZeroQuote_pause_value."m"
+    if s:Entirety_pause_value =~ '\v^-=\d+$' && s:Entirety_pause_value > 0
+        call s:Entirety_PauseAllTimers(1, s:Entirety_pause_value + 3)
+        exe "sleep" s:Entirety_pause_value."m"
     endif
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_redraw(timer) {{{
-function! s:ZeroQuote_redraw(timer)
+" FUNCTION: s:Entirety_redraw(timer) {{{
+function! s:Entirety_redraw(timer)
     call filter( s:ent_timers, 'v:val != a:timer' )
     redraw
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_PauseAllTimers(pause,time) {{{
-function! s:ZeroQuote_PauseAllTimers(pause,time)
+" FUNCTION: s:Entirety_PauseAllTimers(pause,time) {{{
+function! s:Entirety_PauseAllTimers(pause,time)
     for t in s:ent_timers
         call timer_pause(t,a:pause)
     endfor
 
     if a:pause && a:time > 0
         " Limit the amount of time of the pause.
-        call add(s:ent_timers, timer_start(a:time, function("s:ZeroQuote_UnPauseAllTimersCallback")))
+        call add(s:ent_timers, timer_start(a:time, function("s:Entirety_UnPauseAllTimersCallback")))
     endif
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_UnPauseAllTimersCallback(timer) {{{
-function! s:ZeroQuote_UnPauseAllTimersCallback(timer)
+" FUNCTION: s:Entirety_UnPauseAllTimersCallback(timer) {{{
+function! s:Entirety_UnPauseAllTimersCallback(timer)
     call filter( s:ent_timers, 'v:val != a:timer' )
     for t in s:ent_timers
         call timer_pause(t,0)
     endfor
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_evalArgs(args,l,a) {{{
-function! s:ZeroQuote_evalArgs(args,l,a)
+" FUNCTION: s:Entirety_evalArgs(args,l,a) {{{
+function! s:Entirety_evalArgs(args,l,a)
     "echom "ENTRY —→ dict:l °" a:l "° —→ dict:a °" a:a "°"
     call extend(l:,a:l)
-    let [__sdict_extended,__sid] = s:ZeroQuote_TryExtendSDict()
+    let [__sdict_extended,__sid] = s:Entirety_TryExtendSDict()
     "echom "EXTENDED:" s:
     if a:args[0] == '<zq—args>:'
         let __args = deepcopy(eval(substitute(a:args[1],"a:","a:a.","")))
@@ -441,7 +441,7 @@ function! s:ZeroQuote_evalArgs(args,l,a)
         elseif __start_idx >= 0
             if type(Arg__) == v:t_string && Arg__ =~# '\v^[^(].*\)$' && Arg__ !~ '\v\([^)]*\)$'
                 let __obj = substitute(join(__args[__start_idx:__idx]), 'a:\([a-zA-Z_-][a-zA-Z0-9_-]*\)','a:a.\1','g')
-                call add(__new_args,s:ZeroQuote_ExpandVars(eval(__obj),a:l,a:a))
+                call add(__new_args,s:Entirety_ExpandVars(eval(__obj),a:l,a:a))
                 let __start_idx = -1
                 continue
             endif
@@ -450,7 +450,7 @@ function! s:ZeroQuote_evalArgs(args,l,a)
         " …no multi-part token is being built…
         if __start_idx == -1
             " Compensate for explicit variable-expansion requests or {:ex commands…}, etc.
-            let Arg__ = s:ZeroQuote_ExpandVars(Arg__,a:l,a:a)
+            let Arg__ = s:Entirety_ExpandVars(Arg__,a:l,a:a)
 
             if type(Arg__) == v:t_string && (!__already_evaluated[__idx] || Arg__ =~ '^function([^)]\+)$')
                 " A variable?
@@ -467,26 +467,26 @@ function! s:ZeroQuote_evalArgs(args,l,a)
 
             " Store/save the element, further checking for any {exprs} that need
             " expanding.
-            call add(__new_args, s:ZeroQuote_ExpandVars(Arg__,a:l,a:a))
+            call add(__new_args, s:Entirety_ExpandVars(Arg__,a:l,a:a))
             " Increase the following-index…
             let __new_idx += 1
         endif
     endfor
     let __args = __new_args
-    call s:ZeroQuote_TryRestoreSDict(__sdict_extended,__sid)
+    call s:Entirety_TryRestoreSDict(__sdict_extended,__sid)
     return __args
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_ExpandVars(text_or_texts,l,a) {{{
+" FUNCTION: s:Entirety_ExpandVars(text_or_texts,l,a) {{{
 " It expands all {:command …'s} and {[sgb]:user_variable's}.
-func! s:ZeroQuote_ExpandVars(text_or_texts,l,a)
+func! s:Entirety_ExpandVars(text_or_texts,l,a)
     call extend(l:,a:l)
     if type(a:text_or_texts) == v:t_list
         " List input.
         let __texts=deepcopy(a:text_or_texts)
         let __idx = 0
         for __t in __texts
-            let __texts[__idx] = s:ZeroQuote_ExpandVars(__t,a:l,a:a)
+            let __texts[__idx] = s:Entirety_ExpandVars(__t,a:l,a:a)
             let __idx += 1
         endfor
         let Res__ = __texts
@@ -506,8 +506,8 @@ func! s:ZeroQuote_ExpandVars(text_or_texts,l,a)
     return Res__
 endfunc
 " }}}
-" FUNCTION: s:ZeroQuote_GetPrefixValue(pfx, msg) {{{
-func! s:ZeroQuote_GetPrefixValue(pfx, msg)
+" FUNCTION: s:Entirety_GetPrefixValue(pfx, msg) {{{
+func! s:Entirety_GetPrefixValue(pfx, msg)
     if a:pfx =~ '^[a-zA-Z]'
         let mres = matchlist( (type(a:msg) == 3 ? a:msg[0] : a:msg),'\v^(.{-})'.a:pfx.
                     \ ':([^:]*):(.*)$' )
@@ -536,18 +536,19 @@ endfunc
 
 """""""""""""""""" UTILITY FUNCTIONS {{{
 " FUNCTION: EntiretyMessages(arg=v:none) {{{
-function! EntiretyMessages(arg=v:none)
-    if a:arg == "clear"
+function! EntiretyMessages(...)
+    let arg = a:0 ? a:1 : ''
+    if arg == "clear"
         let g:ent_messages = []
         return 0
     endif
-    if !empty( a:arg )
-        0EntiretyPrint %0Error%-: Invalid argument \(%3 a:arg%- ) given to %2:Message%-, allowed is only optional: %2clear%-
+    if !empty( arg )
+        0EntiretyPrint %0Error%-: Invalid argument \(%3 arg%- ) given to %2:Message%-, allowed is only optional: %2clear%-
         return 1
     endif
     let s:ent_MessagesCmd_state = 1
     for msg in g:ent_messages
-        call s:ZeroQuote_EntiretyPrint(msg[0],msg[1:])
+        call s:Entirety_Print(msg[0],msg[1:])
     endfor
     let s:ent_MessagesCmd_state = 0
     return 0
@@ -564,3 +565,7 @@ command! -nargs=? EntiretyMessages call EntiretyMessages(<q-args>)
 " Skip the warning for this more repair-tool command…
 command! -nargs=* -complete=command EntiretyStateRun <args>
 
+let Obj = {}
+function Obj.translate(line) dict
+  return "Hi there!" . line " . line . line . line
+endfunction
